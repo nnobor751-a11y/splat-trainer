@@ -278,7 +278,7 @@ small.note{display:block;color:var(--muted);font-size:11.5px;line-height:1.6;mar
       <div class="eyebrow" style="margin-top:16px">自分のブキ</div>
       <select id="inWeapon" class="inp"></select>
 
-      <div class="eyebrow" style="margin-top:16px">味方の編成タイプ(任意・①と②から1つずつ選ぶ)</div>
+      <div class="eyebrow" style="margin-top:16px">味方の編成タイプ(任意・①〜③から1つずつ選ぶ)</div>
       <div class="compaxis"><span class="n">1</span>塗り ⇔ 攻撃</div>
       <div class="seg" id="compType">
         <button class="tag" data-v="塗り編成" onclick="pickSeg(this,'compType')">塗り編成</button>
@@ -290,6 +290,12 @@ small.note{display:block;color:var(--muted);font-size:11.5px;line-height:1.6;mar
         <button class="tag" data-v="SP強い" onclick="pickSeg(this,'compSp')">SP強い</button>
         <button class="tag" data-v="SP五分" onclick="pickSeg(this,'compSp')">五分</button>
         <button class="tag" data-v="SP弱い" onclick="pickSeg(this,'compSp')">SP弱い</button>
+      </div>
+      <div class="compaxis"><span class="n">3</span>ブキ</div>
+      <div class="seg" id="compWp">
+        <button class="tag" data-v="ブキ強い" onclick="pickSeg(this,'compWp')">ブキ強い</button>
+        <button class="tag" data-v="ブキ五分" onclick="pickSeg(this,'compWp')">五分</button>
+        <button class="tag" data-v="ブキ弱い" onclick="pickSeg(this,'compWp')">ブキ弱い</button>
       </div>
 
       <div id="deathArea">
@@ -430,7 +436,7 @@ const FOCUSES=[
 ];
 const DEATH_TAGS=['塗り中に潜伏キル','無警戒で奇襲された','前に詰めるのが早すぎた','孤立して囲まれた','人数不利で突撃','正面で撃ち負けた','射程負けの相手に挑んだ','裏取りされた','引き際が遅れた','キルを深追いした','敵SPに巻き込まれた','ボムをもらった','復帰直後にやられた','インク切れで撃ち負けた','高台・有利ポジから撃たれた','その他'];
 const STAGES=['ユノハナ大渓谷','ゴンズイ地区','ヤガラ市場','マテガイ放水路','ナメロウ金属','マサバ海峡大橋','キンメダイ美術館','マヒマヒリゾート&スパ','海女美術大学','チョウザメ造船','ザトウマーケット','スメーシーワールド','クサヤ温泉','ヒラメが丘団地','ナンプラー遺跡','マンタマリア号','タラポートショッピングパーク','コンブトラック','タカアシ経済特区','オヒョウ海運','バイガイ亭','ネギトロ炭鉱','カジキ空港','リュウグウターミナル','デカライン高架下'];
-const COMP_TAGS=['塗り編成','編成五分','攻撃編成','SP強い','SP五分','SP弱い'];
+const COMP_TAGS=['塗り編成','編成五分','攻撃編成','SP強い','SP五分','SP弱い','ブキ強い','ブキ五分','ブキ弱い'];
 const RULES=['ナワバリ','ガチエリア','ガチヤグラ','ガチホコ','ガチアサリ'];
 const WEAPONS={
  'シューター':['わかばシューター','スプラシューター','シャープマーカー','プロモデラーMG','.52ガロン','N-ZAP85','プライムシューター','.96ガロン','ジェットスイーパー','スペースシューター','ボールドマーカー','L3リールガン','H3リールガン','ボトルガイザー'],
@@ -529,7 +535,7 @@ function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;',
 /* ================= log ================= */
 let cur=null;
 function pickResult(res){
-  cur={res,fd:null,tags:[],rule:D.lastRule||null,compType:null,compSp:null};
+  cur={res,fd:null,tags:[],rule:D.lastRule||null,compType:null,compSp:null,compWp:null};
   document.getElementById('detailCard').style.display='block';
   document.getElementById('logFocusName').textContent=curFocus().t;
   document.querySelectorAll('#detailCard .seg .tag').forEach(b=>b.classList.remove('on'));
@@ -583,7 +589,7 @@ function saveMatch(){
   const dd=dRaw===''?null:Math.max(0,parseInt(dRaw)||0);
   const wp=document.getElementById('inWeapon').value||null;
   if(stage)D.lastStage=stage; if(wp)D.lastWeapon=wp; if(cur.rule)D.lastRule=cur.rule;
-  const comp=[cur.compType,cur.compSp].filter(Boolean);
+  const comp=[cur.compType,cur.compSp,cur.compWp].filter(Boolean);
   D.matches.push({d:dstr(new Date()),t:Date.now(),res:cur.res,fd:cur.fd,tags:cur.tags,
     fid:curFocus().id,rule:cur.rule,stage,k,dd,wp,comp});
   save(); cancelLog(); renderAll();
