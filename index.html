@@ -178,6 +178,10 @@ select.inp{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 5
 .howto summary{color:var(--cyan);font-size:12px;font-weight:800;cursor:pointer}
 .howto small.note{margin-top:6px}
 #pg-tr .row{flex:none}
+.diffseg{display:flex;gap:6px;margin-bottom:8px;flex:none}
+.diffseg button{flex:1;background:var(--surface2);border:1px solid var(--line);color:var(--muted);
+  font-family:var(--body);font-weight:800;font-size:12px;padding:9px 4px;border-radius:10px;cursor:pointer}
+.diffseg button.on{background:var(--cyan);color:#15141F;border-color:var(--cyan)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:96px;background:var(--lime);color:#15141F;
   font-weight:800;font-size:13px;padding:10px 18px;border-radius:99px;z-index:80;display:none}
 .toast.on{display:block;animation:tin 1.6s ease forwards}
@@ -361,7 +365,12 @@ small.note{display:block;color:var(--muted);font-size:11.5px;line-height:1.6;mar
       <div class="tm" id="trTime">60</div>
       <div>盤面正解:<span class="sc" id="trAware">0/0</span></div>
     </div>
-    <div class="row" style="margin-top:12px">
+    <div class="diffseg" id="diffSeg">
+      <button data-d="easy" onclick="setDiff('easy')">やさしい</button>
+      <button data-d="normal" onclick="setDiff('normal')">ふつう</button>
+      <button data-d="hard" onclick="setDiff('hard')">むずい</button>
+    </div>
+    <div class="row" style="margin-top:0">
       <button class="btn lime" id="trBtn" onclick="startTraining()" style="flex:1">スタート(60秒)</button>
     </div>
     <details class="howto">
@@ -433,7 +442,7 @@ const WEAPONS={
  'その他':['その他']
 };
 const KEY='splat-trainer-v1';
-let D={matches:[],focusIdx:0,focusDate:'',customFocuses:[]};
+let D={matches:[],focusIdx:0,focusDate:'',customFocuses:[],diff:'easy'};
 let mem=null; // fallback storage
 
 function allFocuses(){return FOCUSES.concat(D.customFocuses||[]);}
@@ -443,6 +452,7 @@ async function load(){
   try{const r=localStorage.getItem(KEY); if(r){D=JSON.parse(r);} }
   catch(e){ if(mem) D=JSON.parse(mem); }
   if(!Array.isArray(D.customFocuses))D.customFocuses=[];
+  if(!D.diff)D.diff='easy';
   const today=dstr(new Date());
   if(D.focusDate!==today){ // 日替わりで課題をローテーション
     if(D.focusDate) D.focusIdx=(D.focusIdx+1)%allFocuses().length;
@@ -702,13 +712,14 @@ function drawLamps(){
     allies.map(lamp).join('')+'<div class="lp gap"></div>'+foes.map(lamp).join('');
 }
 function moveAll(){
+  const d=curDiff();
   tr.players.forEach(p=>{
     if(p.alive){
       p.x=clamp01(p.x+(Math.random()-0.5)*0.5);
       p.y=clamp01(p.y+(Math.random()-0.5)*0.5);
-      if(Math.random()<0.12)p.hidden=!p.hidden; // 潜伏トグル(生存・ランプは点灯)
+      if(Math.random()<d.hide)p.hidden=!p.hidden; // 潜伏トグル(生存・ランプは点灯)
     }
-    if(Math.random()<0.06){p.alive=!p.alive;if(p.alive)p.hidden=false;} // 倒れる/復帰
+    if(Math.random()<d.die){p.alive=!p.alive;if(p.alive)p.hidden=false;} // 倒れる/復帰
   });
   ['ally','foe'].forEach(side=>{ // 各チーム最低1人は生存
     const team=tr.players.filter(p=>p.side===side);
@@ -729,7 +740,8 @@ function startTraining(){
 }
 function scheduleQuiz(){
   if(!tr.on)return;
-  const wait=4500+Math.random()*3500;
+  const d=curDiff();
+  const wait=d.qMin+Math.random()*d.qVar;
   tr.timers.push(setTimeout(()=>{if(tr.on)fireQuiz();},wait));
 }
 function advLabel(a,f){return a>f?'有利':a<f?'不利':'五分';}
@@ -741,7 +753,7 @@ function fireQuiz(){
   const foeAlive=foes.filter(p=>p.alive).length;
   const visFoe=foes.filter(p=>p.alive&&!p.hidden);
   const visAlly=allies.filter(p=>p.alive&&!p.hidden);
-  const types=['adv','foeWhere','allyWhere','foeCount'];
+  const types=curDiff().types;
   let type=types[Math.floor(Math.random()*types.length)];
   if(type==='foeWhere'&&!visFoe.length)type='adv';
   if(type==='allyWhere'&&!visAlly.length)type='adv';
@@ -766,7 +778,7 @@ function showQuiz(q,opts,correct){
   opts.forEach(o=>{const b=document.createElement('button');b.textContent=o;
     b.onclick=()=>answerQuiz(o===correct);ow.appendChild(b);});
   ov.classList.add('on');
-  tr.quizTimeout=setTimeout(()=>{if(ov.classList.contains('on'))answerQuiz(false);},4500);
+  tr.quizTimeout=setTimeout(()=>{if(ov.classList.contains('on'))answerQuiz(false);},curDiff().qTime);
   tr.timers.push(tr.quizTimeout);
 }
 function answerQuiz(ok){
@@ -779,10 +791,18 @@ function answerQuiz(ok){
   toast(ok?'正解!':'うーん、もう一度盤面を意識');
   scheduleQuiz();
 }
-const NUMS=12;
+const DIFF={
+  easy:  {nums:6,  qMin:7000, qVar:3000, qTime:6000, hide:0.06, die:0.03, types:['adv','foeWhere','allyWhere']},
+  normal:{nums:9,  qMin:5500, qVar:3000, qTime:5000, hide:0.10, die:0.05, types:['adv','foeWhere','allyWhere','foeCount']},
+  hard:  {nums:12, qMin:4500, qVar:3500, qTime:4000, hide:0.14, die:0.07, types:['adv','foeWhere','allyWhere','foeCount']}
+};
+function curDiff(){return DIFF[D.diff]||DIFF.easy;}
+function setDiff(d){D.diff=d;save();renderDiff();toast('難易度:'+({easy:'やさしい',normal:'ふつう',hard:'むずい'}[d]));}
+function renderDiff(){const c=D.diff||'easy';document.querySelectorAll('#diffSeg button').forEach(b=>b.classList.toggle('on',b.dataset.d===c));}
 function newSet(){
   const f=document.getElementById('field');
   f.innerHTML=''; tr.next=1;
+  const NUMS=curDiff().nums;
   const cols=3, rows=Math.ceil(NUMS/cols);
   const fw=f.clientWidth||300, fh=f.clientHeight||300;
   const cellW=fw/cols, cellH=fh/rows, size=52;
@@ -801,6 +821,7 @@ function newSet(){
 }
 function tapNum(b,n){
   if(!tr.on)return;
+  const NUMS=curDiff().nums;
   if(n===tr.next){
     b.classList.add('gone'); setTimeout(()=>b.remove(),180);
     tr.next++;
@@ -811,7 +832,7 @@ function tapNum(b,n){
   }
 }
 function upd(){
-  document.getElementById('trNext').textContent=tr.next>NUMS?'✓':tr.next;
+  document.getElementById('trNext').textContent=tr.next>curDiff().nums?'✓':tr.next;
   document.getElementById('trTime').textContent=tr.time;
   document.getElementById('trAware').textContent=tr.seen+'/'+tr.events;
 }
@@ -831,7 +852,7 @@ function endTraining(){
 /* ================= misc ================= */
 function toast(s){const t=document.getElementById('toast');t.textContent=s;
   t.classList.remove('on');void t.offsetWidth;t.classList.add('on');}
-function renderAll(){renderHome();renderFocusList();renderLog();
+function renderAll(){renderHome();renderFocusList();renderLog();renderDiff();
   const d=new Date();
   document.getElementById('hdrDate').textContent=(d.getMonth()+1)+'/'+d.getDate()+' '+'日月火水木金土'[d.getDay()];
 }
