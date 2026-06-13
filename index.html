@@ -101,6 +101,8 @@ nav button.on .ic{filter:drop-shadow(0 0 6px rgba(191,242,46,.6))}
 .seg{display:flex;gap:8px;margin-top:10px}
 .seg .tag{flex:1;text-align:center}
 .seg .tag.on.ok{background:var(--lime);border-color:var(--lime);color:#15141F}
+.compaxis{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;color:var(--muted);margin:12px 0 0}
+.compaxis .n{background:var(--cyan);color:#15141F;border-radius:99px;width:17px;height:17px;display:inline-flex;align-items:center;justify-content:center;font-size:11px}
 .histlist{font-size:13px}
 .histlist .h{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px dashed var(--line)}
 .histlist .h:last-child{border:0}
@@ -276,14 +278,18 @@ small.note{display:block;color:var(--muted);font-size:11.5px;line-height:1.6;mar
       <div class="eyebrow" style="margin-top:16px">自分のブキ</div>
       <select id="inWeapon" class="inp"></select>
 
-      <div class="eyebrow" style="margin-top:16px">味方の編成タイプ(任意)</div>
+      <div class="eyebrow" style="margin-top:16px">味方の編成タイプ(任意・①と②から1つずつ選ぶ)</div>
+      <div class="compaxis"><span class="n">1</span>塗り ⇔ 攻撃</div>
       <div class="seg" id="compType">
-        <button class="tag" onclick="pickSeg(this,'compType')">塗り編成</button>
-        <button class="tag" onclick="pickSeg(this,'compType')">攻撃編成</button>
+        <button class="tag" data-v="塗り編成" onclick="pickSeg(this,'compType')">塗り編成</button>
+        <button class="tag" data-v="編成五分" onclick="pickSeg(this,'compType')">五分</button>
+        <button class="tag" data-v="攻撃編成" onclick="pickSeg(this,'compType')">攻撃編成</button>
       </div>
-      <div class="seg" id="compSp" style="margin-top:8px">
-        <button class="tag" onclick="pickSeg(this,'compSp')">SP強い</button>
-        <button class="tag" onclick="pickSeg(this,'compSp')">SP弱い</button>
+      <div class="compaxis"><span class="n">2</span>スペシャル</div>
+      <div class="seg" id="compSp">
+        <button class="tag" data-v="SP強い" onclick="pickSeg(this,'compSp')">SP強い</button>
+        <button class="tag" data-v="SP五分" onclick="pickSeg(this,'compSp')">五分</button>
+        <button class="tag" data-v="SP弱い" onclick="pickSeg(this,'compSp')">SP弱い</button>
       </div>
 
       <div id="deathArea">
@@ -424,7 +430,7 @@ const FOCUSES=[
 ];
 const DEATH_TAGS=['塗り中に潜伏キル','無警戒で奇襲された','前に詰めるのが早すぎた','孤立して囲まれた','人数不利で突撃','正面で撃ち負けた','射程負けの相手に挑んだ','裏取りされた','引き際が遅れた','キルを深追いした','敵SPに巻き込まれた','ボムをもらった','復帰直後にやられた','インク切れで撃ち負けた','高台・有利ポジから撃たれた','その他'];
 const STAGES=['ユノハナ大渓谷','ゴンズイ地区','ヤガラ市場','マテガイ放水路','ナメロウ金属','マサバ海峡大橋','キンメダイ美術館','マヒマヒリゾート&スパ','海女美術大学','チョウザメ造船','ザトウマーケット','スメーシーワールド','クサヤ温泉','ヒラメが丘団地','ナンプラー遺跡','マンタマリア号','タラポートショッピングパーク','コンブトラック','タカアシ経済特区','オヒョウ海運','バイガイ亭','ネギトロ炭鉱','カジキ空港','リュウグウターミナル','デカライン高架下'];
-const COMP_TAGS=['塗り編成','攻撃編成','SP強い','SP弱い'];
+const COMP_TAGS=['塗り編成','編成五分','攻撃編成','SP強い','SP五分','SP弱い'];
 const RULES=['ナワバリ','ガチエリア','ガチヤグラ','ガチホコ','ガチアサリ'];
 const WEAPONS={
  'シューター':['わかばシューター','スプラシューター','シャープマーカー','プロモデラーMG','.52ガロン','N-ZAP85','プライムシューター','.96ガロン','ジェットスイーパー','スペースシューター','ボールドマーカー','L3リールガン','H3リールガン','ボトルガイザー'],
@@ -565,7 +571,7 @@ function pickSeg(btn,grp){ // 編成2軸:同じ段はどちらか一方、再タ
   const on=btn.classList.contains('on');
   document.querySelectorAll('#'+grp+' .tag').forEach(b=>b.classList.remove('on'));
   if(!on)btn.classList.add('on');
-  cur[grp]=on?null:btn.textContent;
+  cur[grp]=on?null:(btn.dataset.v||btn.textContent);
 }
 function cancelLog(){cur=null;document.getElementById('detailCard').style.display='none';}
 function saveMatch(){

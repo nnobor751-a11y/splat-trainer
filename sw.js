@@ -2,7 +2,7 @@
    アプリ本体ファイルをキャッシュしてオフライン起動を可能にする。
    ※戦績データ(localStorage)はここでは扱わない=各自の端末内のみ。
    アプリ更新時は CACHE のバージョンを上げること(古いキャッシュを破棄するため)。*/
-const CACHE = 'splat-trainer-v3';
+const CACHE = 'splat-trainer-v4';
 const ASSETS = [
   './',
   './index.html',
