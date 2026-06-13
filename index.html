@@ -318,6 +318,12 @@ small.note{display:block;color:var(--muted);font-size:11.5px;line-height:1.6;mar
   <section class="page" id="pg-ana">
     <h4 class="sec">自分の「死にパターン」を見る</h4>
     <div class="card">
+      <div class="eyebrow">AIにコーチしてもらう</div>
+      <button class="btn lime" style="width:100%" onclick="copyAIReport()">📋 分析データをコピー(AIに貼り付け用)</button>
+      <textarea id="aiText" class="inp" style="display:none;margin-top:10px;height:150px;font-size:11px;line-height:1.5" readonly></textarea>
+      <small class="note">押すと「直近50戦のまとめ＋相談プロンプト」がコピーされます。ChatGPTやClaude等に貼り付ければ、弱点と明日の課題を提案してくれます。スマホでコピーできない時は、下に出る文章を長押しで選択。</small>
+    </div>
+    <div class="card">
       <div class="eyebrow">デス原因の内訳(直近50戦・勝敗問わず)</div>
       <div id="deathBars"><div class="empty">デス原因タグを付けると貯まります</div></div>
       <small class="note">一番多いタグ=来週の課題候補です。原因が1つに偏っているのは悪いことではなく、直す場所が明確ということ。</small>
@@ -691,6 +697,59 @@ async function resetAll(){
   D={matches:[],focusIdx:0,focusDate:dstr(new Date()),customFocuses:[]};
   try{localStorage.removeItem(KEY);}catch(e){}
   mem=null; save(); renderAll(); toast('リセットしました');
+}
+
+/* ================= AIコーチ用テキスト ================= */
+function buildAIReport(){
+  const A=D.matches.slice(-50);
+  if(!A.length)return null;
+  const L=[];
+  L.push('# スプラトゥーン3 戦績の分析依頼');
+  L.push('あなたはスプラトゥーン3の上達コーチです。以下は私の直近の戦績データ(課題達成率を重視して練習しています)。');
+  L.push('1) 今の弱点を重要な順に3つ、2) 明日から試せる具体的な「IF→THEN」課題を3つ、3) 一番効きそうな1つ、を提案してください。専門用語は噛み砕いて。');
+  L.push('');
+  const win=A.filter(m=>m.res==='win').length;
+  L.push('## 全体(直近'+A.length+'戦)');
+  L.push('- 勝率: '+Math.round(100*win/A.length)+'% ('+win+'勝'+(A.length-win)+'敗)');
+  const fd=A.filter(m=>m.fd!==null&&m.fd!==undefined);
+  if(fd.length)L.push('- 課題達成率: '+Math.round(100*fd.filter(m=>m.fd).length/fd.length)+'% ('+fd.length+'戦で記録)');
+  const kdm=A.filter(m=>m.k!=null&&m.dd!=null);
+  if(kdm.length){
+    const ak=kdm.reduce((s,m)=>s+m.k,0)/kdm.length, ad=kdm.reduce((s,m)=>s+m.dd,0)/kdm.length;
+    L.push('- 平均キル '+ak.toFixed(1)+' / 平均デス '+ad.toFixed(1)+' / K/D '+(ad>0?(ak/ad).toFixed(2):'-')+' ('+kdm.length+'戦)');
+  }
+  L.push('');
+  const cnt={};A.forEach(m=>(m.tags||[]).forEach(t=>cnt[t]=(cnt[t]||0)+1));
+  const dt=Object.entries(cnt).sort((a,b)=>b[1]-a[1]);
+  if(dt.length){L.push('## デス原因(多い順)');dt.forEach(([t,c])=>L.push('- '+t+': '+c+'回'));L.push('');}
+  function group(label,keyFn){
+    const g={};A.forEach(m=>keyFn(m).forEach(k=>{if(!k)return;g[k]=g[k]||{w:0,n:0};g[k].n++;if(m.res==='win')g[k].w++;}));
+    const ent=Object.entries(g).sort((a,b)=>b[1].n-a[1].n);
+    if(!ent.length)return;
+    L.push('## '+label+'別勝率');
+    ent.forEach(([k,v])=>L.push('- '+k+': '+Math.round(100*v.w/v.n)+'% ('+v.w+'/'+v.n+')'));
+    L.push('');
+  }
+  group('ルール',m=>[m.rule]);
+  group('ステージ',m=>[m.stage]);
+  group('ブキ',m=>[m.wp]);
+  group('味方編成タグ',m=>m.comp||[]);
+  const byDay={};D.matches.forEach(m=>{if(m.fd==null)return;byDay[m.d]=byDay[m.d]||{ok:0,n:0};byDay[m.d].n++;if(m.fd)byDay[m.d].ok++;});
+  const days=Object.keys(byDay).sort().slice(-7);
+  if(days.length){L.push('## 課題達成率(日別・直近7日)');days.forEach(d=>{const v=byDay[d];L.push('- '+d+': '+Math.round(100*v.ok/v.n)+'% ('+v.ok+'/'+v.n+')');});L.push('');}
+  return L.join('\n');
+}
+function copyAIReport(){
+  const txt=buildAIReport();
+  if(!txt){toast('記録がまだありません');return;}
+  const ta=document.getElementById('aiText');
+  ta.value=txt; ta.style.display='block'; ta.scrollIntoView({behavior:'smooth',block:'nearest'});
+  const fallback=()=>{ta.focus();ta.select();toast('下の文章を長押しでコピーしてね');};
+  try{
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(()=>toast('コピーしました!AIに貼り付けてね')).catch(fallback);
+    }else{ ta.focus(); ta.select(); const ok=document.execCommand&&document.execCommand('copy'); toast(ok?'コピーしました!':'下の文章を長押しでコピーしてね'); }
+  }catch(e){ fallback(); }
 }
 
 /* ================= training: map-reading drill ================= */
