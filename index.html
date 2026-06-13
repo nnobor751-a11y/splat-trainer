@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>スプラ上達トレーナー</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#15141F; --surface:#201E30; --surface2:#2A2840;
+  --pink:#F23C8C; --lime:#BFF22E; --cyan:#35E0F2; --yellow:#FFD93B;
+  --text:#F4F2FA; --muted:#8E8AA6; --line:#34324E;
+  --r:18px;
+  --disp:'Mochiy Pop One',system-ui,sans-serif;
+  --body:'M PLUS Rounded 1c',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-weight:500;
+  max-width:520px;margin:0 auto;display:flex;flex-direction:column;min-height:100dvh;
+  background-image:radial-gradient(circle at 85% -5%, rgba(242,60,140,.14), transparent 40%),
+                   radial-gradient(circle at 0% 100%, rgba(191,242,46,.07), transparent 35%);}
+header{padding:18px 18px 8px;display:flex;align-items:baseline;gap:10px}
+header h1{font-family:var(--disp);font-size:21px;letter-spacing:.5px;transform:rotate(-1.5deg)}
+header h1 span{color:var(--lime)}
+header .date{color:var(--muted);font-size:12px;margin-left:auto}
+main{flex:1;overflow-y:auto;padding:6px 16px 90px}
+.page{display:none}.page.on{display:block;animation:in .18s ease}
+@keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+
+/* ---- nav ---- */
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;
+  display:flex;background:rgba(21,20,31,.92);backdrop-filter:blur(8px);border-top:1px solid var(--line);
+  padding:6px 8px calc(8px + env(safe-area-inset-bottom));z-index:50}
+nav button{flex:1;background:none;border:0;color:var(--muted);font-family:var(--body);font-weight:700;
+  font-size:11px;padding:8px 2px;border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
+nav button .ic{font-size:19px;line-height:1}
+nav button.on{color:var(--lime)}
+nav button.on .ic{filter:drop-shadow(0 0 6px rgba(191,242,46,.6))}
+
+/* ---- common ---- */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:.16em;color:var(--muted);margin-bottom:8px}
+.btn{font-family:var(--body);font-weight:800;border:0;border-radius:14px;padding:13px 16px;font-size:15px;cursor:pointer;color:#15141F}
+.btn:active{transform:scale(.97)}
+.btn.pink{background:var(--pink);color:#fff}
+.btn.lime{background:var(--lime)}
+.btn.ghost{background:var(--surface2);color:var(--text);border:1px solid var(--line)}
+.row{display:flex;gap:10px}
+.row .btn{flex:1}
+
+/* ---- home: 課題ステッカー(signature) ---- */
+.sticker{position:relative;background:var(--pink);color:#fff;padding:22px 20px;margin:10px 4px 18px;
+  border-radius:58% 42% 55% 45% / 48% 55% 45% 52%;transform:rotate(-2deg);
+  box-shadow:0 8px 0 rgba(0,0,0,.25)}
+.sticker::after{content:"";position:absolute;width:16px;height:16px;background:var(--pink);
+  border-radius:50% 60% 45% 55%;right:-4px;bottom:6px}
+.sticker .lab{font-size:11px;font-weight:800;letter-spacing:.18em;opacity:.85}
+.sticker h2{font-family:var(--disp);font-size:20px;margin:6px 0 8px;line-height:1.35}
+.sticker p{font-size:13px;font-weight:700;opacity:.92;line-height:1.5}
+.sticker .chg{position:absolute;top:10px;right:16px;background:rgba(0,0,0,.22);color:#fff;border:0;
+  border-radius:99px;font-size:11px;font-weight:800;padding:6px 12px;cursor:pointer}
+
+.stat3{display:flex;gap:10px;margin-bottom:14px}
+.stat3 .card{flex:1;text-align:center;margin:0;padding:12px 6px}
+.stat3 .num{font-family:var(--disp);font-size:22px;color:var(--lime)}
+.stat3 .num.pk{color:var(--pink)}.stat3 .num.cy{color:var(--cyan)}
+.stat3 .cap{font-size:10px;color:var(--muted);font-weight:700;margin-top:3px}
+
+.rules li{list-style:none;display:flex;gap:10px;padding:10px 0;border-bottom:1px dashed var(--line);font-size:13px;line-height:1.55}
+.rules li:last-child{border:0}
+.rules .if{color:var(--cyan);font-weight:800;white-space:nowrap}
+
+/* ---- focus manager ---- */
+.frow{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px dashed var(--line)}
+.frow:last-child{border:0}
+.frow.cur .fpick{color:var(--lime)}
+.fpick{flex:1;text-align:left;background:none;border:0;color:var(--text);font-family:var(--body);
+  font-weight:700;font-size:13px;cursor:pointer;line-height:1.45}
+.fpick small{display:block;color:var(--muted);font-weight:500;font-size:11px;margin-top:2px}
+.fdel{background:none;border:1px solid var(--line);color:var(--muted);border-radius:99px;
+  font-size:11px;font-weight:700;padding:5px 11px;cursor:pointer;white-space:nowrap}
+.fbi{font-size:10px;color:var(--muted);font-weight:700;white-space:nowrap}
+
+/* ---- log ---- */
+.bigrow{display:flex;gap:12px;margin-bottom:14px}
+.bigrow .btn{flex:1;font-size:18px;padding:20px 10px;font-family:var(--disp);font-weight:400}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.tag{background:var(--surface2);border:1px solid var(--line);color:var(--text);border-radius:99px;
+  padding:8px 13px;font-size:12px;font-weight:700;cursor:pointer}
+.tag.on{background:var(--pink);border-color:var(--pink);color:#fff}
+.seg{display:flex;gap:8px;margin-top:10px}
+.seg .tag{flex:1;text-align:center}
+.seg .tag.on.ok{background:var(--lime);border-color:var(--lime);color:#15141F}
+.histlist{font-size:13px}
+.histlist .h{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px dashed var(--line)}
+.histlist .h:last-child{border:0}
+.histlist .res{font-family:var(--disp);font-size:13px;width:44px}
+.histlist .res.w{color:var(--lime)}.histlist .res.l{color:var(--pink)}
+.histlist .ti{color:var(--muted);font-size:11px;margin-left:auto}
+.histlist .tg{color:var(--muted);font-size:11px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ---- inputs ---- */
+.inp{width:100%;background:var(--surface2);border:1px solid var(--line);color:var(--text);
+  border-radius:12px;padding:11px 12px;font-family:var(--body);font-weight:700;font-size:14px;appearance:none}
+select.inp{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+  background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px;background-repeat:no-repeat}
+.kd{display:flex;align-items:center;gap:10px}
+.kdbox{flex:1;display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:8px 12px}
+.kdbox .kl{font-size:11px;font-weight:800;color:var(--lime);white-space:nowrap}
+.kdbox input{flex:1;width:100%;background:none;border:0;color:var(--text);font-family:var(--disp);font-size:20px;text-align:center;outline:none}
+.kdsl{color:var(--muted);font-family:var(--disp);font-size:18px}
+
+/* ---- break overlay ---- */
+.overlay{position:fixed;inset:0;background:rgba(12,11,20,.9);backdrop-filter:blur(6px);z-index:99;
+  display:none;align-items:center;justify-content:center;padding:24px}
+.overlay.on{display:flex}
+.overlay .box{background:var(--surface);border:2px solid var(--pink);border-radius:24px;padding:26px 22px;max-width:380px;text-align:center}
+.overlay h3{font-family:var(--disp);font-size:20px;color:var(--pink);margin-bottom:10px}
+.overlay p{font-size:13px;line-height:1.7;color:var(--text);margin-bottom:16px}
+.overlay .timer{font-family:var(--disp);font-size:44px;color:var(--lime);margin:6px 0 16px}
+
+/* ---- analysis ---- */
+.bar{margin:10px 0}
+.bar .bl{display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:4px}
+.bar .tr{height:14px;background:var(--surface2);border-radius:99px;overflow:hidden}
+.bar .fl{height:100%;background:var(--pink);border-radius:99px;transition:width .4s ease}
+.empty{color:var(--muted);font-size:13px;text-align:center;padding:18px 0;line-height:1.7}
+
+/* ---- training: map-reading drill ---- */
+#pg-tr.on{display:flex;flex-direction:column;height:calc(100dvh - 156px);min-height:360px}
+#pg-tr h4.sec{margin:2px 0 8px;flex:none}
+.lampbar{display:flex;gap:6px;justify-content:center;align-items:center;background:var(--surface2);
+  border:1px solid var(--line);border-radius:16px;padding:7px;margin-bottom:8px;user-select:none;flex:none}
+.lampbar .lp{width:22px;height:22px;border-radius:8px;transition:all .15s;transform:rotate(45deg);margin:3px}
+.lp.ally{background:var(--lime)}.lp.foe{background:var(--pink)}
+.lp.dead{background:var(--surface);border:2px solid var(--line);transform:rotate(45deg) scale(.74)}
+.lp.gap{width:12px;background:none!important;border:none!important;margin:0 2px}
+.minimap{position:relative;height:104px;background:var(--surface);border:1px solid var(--line);
+  border-radius:16px;overflow:hidden;margin-bottom:8px;flex:none}
+.minimap .zg{position:absolute;top:8px;bottom:8px;width:1px;background:var(--line);opacity:.45}
+.minimap .zlabels{position:absolute;top:6px;left:0;right:0;display:flex;pointer-events:none}
+.minimap .zlabels span{flex:1;text-align:center;font-size:10px;font-weight:800;color:var(--muted)}
+.dot{position:absolute;width:20px;height:20px;border-radius:52% 48% 55% 45%;
+  transform:translate(-50%,-50%);transition:left .85s ease,top .85s ease,opacity .3s}
+.dot.foe{background:var(--pink);box-shadow:0 0 10px rgba(242,60,140,.55)}
+.dot.ally{background:var(--lime);box-shadow:0 0 10px rgba(191,242,46,.5)}
+.dot.hide{opacity:0}
+.qbox{background:var(--surface);border:2px solid var(--cyan);border-radius:24px;padding:30px 24px;
+  max-width:380px;width:100%;text-align:center}
+.qbox .q{font-family:var(--disp);font-size:20px;margin-bottom:22px;line-height:1.45}
+.qbox .opts{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.qbox .opts button{background:var(--surface2);border:1px solid var(--line);color:var(--text);
+  font-family:var(--disp);font-size:20px;min-width:66px;padding:14px 18px;border-radius:14px;cursor:pointer}
+.qbox .opts button:active{transform:scale(.95);background:var(--cyan);color:#15141F;border-color:var(--cyan)}
+.field{position:relative;flex:1;min-height:120px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+  margin-bottom:8px;overflow:hidden;touch-action:manipulation}
+.blob{position:absolute;width:52px;height:52px;border-radius:55% 45% 60% 40%/50% 60% 40% 55%;
+  background:var(--cyan);display:flex;align-items:center;justify-content:center;cursor:pointer;
+  animation:pop .2s ease;font-family:var(--disp);font-size:22px;color:#15141F;user-select:none}
+@keyframes pop{from{transform:scale(.3)}to{transform:scale(1)}}
+.blob.gone{animation:bye .18s ease forwards}
+@keyframes bye{to{transform:scale(1.7);opacity:0}}
+.blob.wrong{animation:wrong .35s ease}
+@keyframes wrong{0%,100%{box-shadow:none}50%{box-shadow:0 0 0 4px var(--pink),0 0 14px var(--pink)}}
+.hud{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-weight:800;font-size:14px;flex:none}
+.hud .sc{color:var(--lime)}.hud .tm{color:var(--yellow);font-family:var(--disp)}
+.howto{margin-top:8px;flex:none}
+.howto summary{color:var(--cyan);font-size:12px;font-weight:800;cursor:pointer}
+.howto small.note{margin-top:6px}
+#pg-tr .row{flex:none}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:96px;background:var(--lime);color:#15141F;
+  font-weight:800;font-size:13px;padding:10px 18px;border-radius:99px;z-index:80;display:none}
+.toast.on{display:block;animation:tin 1.6s ease forwards}
+@keyframes tin{0%{opacity:0;transform:translate(-50%,8px)}12%,80%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
+h4.sec{font-family:var(--disp);font-size:15px;margin:4px 0 10px}
+small.note{display:block;color:var(--muted);font-size:11.5px;line-height:1.6;margin-top:8px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <h1>スプラ<span>上達</span>トレーナー</h1>
+  <div class="date" id="hdrDate"></div>
+</header>
+
+<main>
+  <!-- ============ HOME ============ -->
+  <section class="page on" id="pg-home">
+    <div class="sticker">
+      <button class="chg" onclick="nextFocus()">課題を変える</button>
+      <div class="lab">今日の課題はこれだけ</div>
+      <h2 id="focusTitle"></h2>
+      <p id="focusRule"></p>
+    </div>
+
+    <div class="stat3">
+      <div class="card"><div class="num" id="stWin">-</div><div class="cap">直近50戦の勝率</div></div>
+      <div class="card"><div class="num cy" id="stFocus">-</div><div class="cap">課題の達成率</div></div>
+      <div class="card"><div class="num pk" id="stToday">0</div><div class="cap">今日の試合数</div></div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">今日の課題を選ぶ・自分で追加する</div>
+      <div id="focusList"></div>
+      <div style="margin-top:12px">
+        <input id="nfTitle" class="inp" placeholder="課題タイトル(例:5秒に1回マップを見る)">
+        <input id="nfRule" class="inp" style="margin-top:8px" placeholder="具体ルール(例:塗りを5秒続けたら必ずミニマップを確認)">
+        <button class="btn lime" style="width:100%;margin-top:8px" onclick="addFocus()">＋ 課題を追加</button>
+      </div>
+      <small class="note">タイトルをタップすると今日の課題に設定。自作した課題も日替わりローテーションに入り、削除できます。</small>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">IF → THEN ルール(試合中はこれだけ)</div>
+      <ul class="rules">
+        <li><span class="if">デス音がしたら</span>イカランプを見る</li>
+        <li><span class="if">敵インクが見えたら</span>塗らずにクリアリング</li>
+        <li><span class="if">3秒塗ったら</span>視点を一周振る</li>
+        <li><span class="if">味方SPの音がしたら</span>一緒に前へ出る</li>
+        <li><span class="if">味方が2落ちしたら</span>下がって時間を稼ぐ</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">今日の流れ</div>
+      <ul class="rules">
+        <li>① 試し打ち5分(エイム+視点振りウォームアップ)</li>
+        <li>② 「マップ読み」を1〜2回(盤面把握の準備運動)</li>
+        <li>③ 試合へ。終わるたびに「記録」タブで10秒入力</li>
+        <li>④ 2連敗したら休憩タイマーが出ます。従うこと!</li>
+        <li>⑤ 最後にリプレイを1試合だけ見て、明日の課題を決める</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ LOG ============ -->
+  <section class="page" id="pg-log">
+    <h4 class="sec">試合が終わったら10秒で記録</h4>
+    <div class="bigrow">
+      <button class="btn lime" id="btnWin" onclick="pickResult('win')">WIN!</button>
+      <button class="btn pink" id="btnLose" onclick="pickResult('lose')">LOSE…</button>
+    </div>
+
+    <div class="card" id="detailCard" style="display:none">
+      <div class="eyebrow">今日の課題「<span id="logFocusName"></span>」はできた?</div>
+      <div class="seg">
+        <button class="tag ok" data-fd="1" onclick="pickFocus(this)">できた</button>
+        <button class="tag" data-fd="0" onclick="pickFocus(this)">できなかった</button>
+      </div>
+      <div class="eyebrow" style="margin-top:16px">ルール</div>
+      <div class="tags" id="ruleWrap"></div>
+
+      <div class="eyebrow" style="margin-top:16px">ステージ</div>
+      <select id="inStage" class="inp"></select>
+
+      <div class="eyebrow" style="margin-top:16px">キル / デス</div>
+      <div class="kd">
+        <div class="kdbox"><span class="kl">キル</span><input type="number" id="inK" min="0" max="99" inputmode="numeric" placeholder="-"></div>
+        <div class="kdsl">/</div>
+        <div class="kdbox"><span class="kl" style="color:var(--pink)">デス</span><input type="number" id="inD" min="0" max="99" inputmode="numeric" placeholder="-"></div>
+      </div>
+
+      <div class="eyebrow" style="margin-top:16px">自分のブキ</div>
+      <select id="inWeapon" class="inp"></select>
+
+      <div class="eyebrow" style="margin-top:16px">味方の編成タイプ(任意)</div>
+      <div class="seg" id="compType">
+        <button class="tag" onclick="pickSeg(this,'compType')">塗り編成</button>
+        <button class="tag" onclick="pickSeg(this,'compType')">攻撃編成</button>
+      </div>
+      <div class="seg" id="compSp" style="margin-top:8px">
+        <button class="tag" onclick="pickSeg(this,'compSp')">SP強い</button>
+        <button class="tag" onclick="pickSeg(this,'compSp')">SP弱い</button>
+      </div>
+
+      <div id="deathArea">
+        <div class="eyebrow" style="margin-top:16px">デスした原因(勝敗問わず・複数OK)</div>
+        <div class="tags" id="tagWrap"></div>
+      </div>
+      <div class="row" style="margin-top:16px">
+        <button class="btn ghost" onclick="cancelLog()">やめる</button>
+        <button class="btn lime" onclick="saveMatch()">記録する</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">今日の試合</div>
+      <div class="histlist" id="todayList"><div class="empty">まだ記録がありません。<br>1試合終わるごとにWIN/LOSEを押すだけ!</div></div>
+    </div>
+  </section>
+
+  <!-- ============ ANALYSIS ============ -->
+  <section class="page" id="pg-ana">
+    <h4 class="sec">自分の「死にパターン」を見る</h4>
+    <div class="card">
+      <div class="eyebrow">デス原因の内訳(直近50戦・勝敗問わず)</div>
+      <div id="deathBars"><div class="empty">デス原因タグを付けると貯まります</div></div>
+      <small class="note">一番多いタグ=来週の課題候補です。原因が1つに偏っているのは悪いことではなく、直す場所が明確ということ。</small>
+    </div>
+    <div class="card">
+      <div class="eyebrow">ルール別勝率</div>
+      <div id="ruleBars"><div class="empty">ルールを記録すると貯まります</div></div>
+      <small class="note">勝率が低いルールは、目標(カウント)への意識づけから。エリアなら「人数有利の時だけ塗り返す」等。</small>
+    </div>
+    <div class="card">
+      <div class="eyebrow">ブキ別勝率</div>
+      <div id="weaponBars"><div class="empty">ブキを記録すると貯まります</div></div>
+    </div>
+    <div class="card">
+      <div class="eyebrow">課題の達成率(日別)</div>
+      <div id="focusBars"><div class="empty">記録が貯まるとここに出ます</div></div>
+      <small class="note">勝敗より、この数字が上がっているかを見てください。課題達成率が高い週は、少し遅れて勝率がついてきます。</small>
+    </div>
+    <div class="card">
+      <div class="eyebrow">キルレ(直近50戦の平均)</div>
+      <div class="stat3" style="margin:0">
+        <div class="card" style="background:var(--surface2)"><div class="num" id="avgK">-</div><div class="cap">平均キル</div></div>
+        <div class="card" style="background:var(--surface2)"><div class="num pk" id="avgD">-</div><div class="cap">平均デス</div></div>
+        <div class="card" style="background:var(--surface2)"><div class="num cy" id="avgKD">-</div><div class="cap">K/D</div></div>
+      </div>
+      <small class="note">目標はキル数よりまず「平均デスを減らす」こと。デスが減ると盤面を見る余裕も増えます。</small>
+    </div>
+    <div class="card">
+      <div class="eyebrow">ステージ別勝率</div>
+      <div id="stageBars"><div class="empty">ステージを記録すると貯まります</div></div>
+      <small class="note">勝率が低いステージは「さんぽ」で地形・潜伏ポイントを確認してから潜ると効果的。</small>
+    </div>
+    <div class="card">
+      <div class="eyebrow">味方編成タグ別の勝率</div>
+      <div id="compBars"><div class="empty">編成タグを記録すると貯まります</div></div>
+      <small class="note">「後衛寄りだと負けやすい」等が見えたら、その編成のときの自分の立ち回りを変える材料になります。</small>
+    </div>
+    <div class="card">
+      <div class="eyebrow">データ管理</div>
+      <button class="btn ghost" style="width:100%" onclick="resetAll()">記録をすべてリセット</button>
+    </div>
+  </section>
+
+  <!-- ============ TRAINING(map-reading) ============ -->
+  <section class="page" id="pg-tr">
+    <h4 class="sec">マップ読み:手元に集中しながら敵の位置を把握</h4>
+    <div class="lampbar" id="lampBar"></div>
+    <div class="minimap" id="minimap">
+      <div class="zg" style="left:33.3%"></div>
+      <div class="zg" style="left:66.6%"></div>
+      <div class="zlabels"><span>左</span><span>中</span><span>右</span></div>
+    </div>
+    <div class="field" id="field"></div>
+    <div class="hud">
+      <div>次:<span class="sc" id="trNext">1</span></div>
+      <div class="tm" id="trTime">60</div>
+      <div>盤面正解:<span class="sc" id="trAware">0/0</span></div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn lime" id="trBtn" onclick="startTraining()" style="flex:1">スタート(60秒)</button>
+    </div>
+    <details class="howto">
+      <summary>遊び方</summary>
+      <small class="note">
+        下のフィールドの数字インクを<b>1から順番にタップ</b>(=塗り・撃ち合いの代わり。集中を持っていかれる作業役)。最後まで押し切ると新しい配置でループ。
+        その間、上の<b>イカランプ</b>で味方(緑)・敵(ピンク)の生死=人数有利/不利が変化し、
+        ミニマップでは生きているイカが動き、ときどき潜伏(消える)します。
+        <b>突然クイズだけの画面になり「人数は有利?不利?」「敵/味方はどこに多い?」「敵は何人見えた?」</b>と聞かれるので、
+        手元をやりながらチラ見で盤面を覚えて即答。実戦の「塗りながら盤面を読む」神経を鍛えます。正解率80%目標。
+      </small>
+    </details>
+  </section>
+</main>
+
+<!-- break overlay -->
+<div class="overlay" id="ovBreak">
+  <div class="box">
+    <h3>2連敗ストップ!</h3>
+    <p>ここで続けるとウデマエも気分も溶けます。<br>コントローラーを置いて、水を飲んで、深呼吸。<br>タイマーが終わるまで休憩です。</p>
+    <div class="timer" id="breakTimer">5:00</div>
+    <button class="btn lime" style="width:100%" onclick="closeBreak()">休憩おわり!再開する</button>
+  </div>
+</div>
+
+<!-- drill quiz overlay(全画面) -->
+<div class="overlay" id="drillQuiz">
+  <div class="qbox">
+    <div class="q" id="dqQ"></div>
+    <div class="opts" id="dqOpts"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<nav>
+  <button class="on" data-pg="home" onclick="go('home',this)"><span class="ic">🏠</span>ホーム</button>
+  <button data-pg="log" onclick="go('log',this)"><span class="ic">✍️</span>記録</button>
+  <button data-pg="ana" onclick="go('ana',this)"><span class="ic">📊</span>分析</button>
+  <button data-pg="tr" onclick="go('tr',this)"><span class="ic">🗺️</span>マップ読み</button>
+</nav>
+
+<script>
+/* ================= data ================= */
+const FOCUSES=[
+ {id:'lamp',  t:'デス音がしたらイカランプを見る', r:'味方・敵問わず誰かが倒れた音をトリガーに、画面上部へ視線。人数有利なら押す、不利なら下がる。'},
+ {id:'clear', t:'敵インクの近くで塗り始めない',   r:'敵インクが視界にあるときは塗り作業禁止。まず撃ってクリアリングしてから塗る。'},
+ {id:'paint3',t:'塗りは3秒区切りで視点を振る',     r:'3秒塗ったら一度レバーで視点を一周。塗りはエイム不要だから、塗り中こそ周りを見る。'},
+ {id:'sp',    t:'味方のスペシャルに乗っかる',     r:'味方のSP発動音が聞こえたら一緒に前進。自分で起点を作るより、味方の起点に合わせる。'},
+ {id:'back',  t:'味方2落ちで絶対に前に出ない',   r:'イカランプで味方が2人以上倒れていたら、下がって生存。復帰を待ってから一緒に押す。'},
+ {id:'death', t:'デス数を1試合5以下に抑える',     r:'勝てるか怪しい撃ち合いは仕掛けない。生きていること自体が塗りと盤面の貢献。'},
+];
+const DEATH_TAGS=['塗り中に潜伏キル','無警戒で奇襲された','前に詰めるのが早すぎた','孤立して囲まれた','人数不利で突撃','正面で撃ち負けた','射程負けの相手に挑んだ','裏取りされた','引き際が遅れた','キルを深追いした','敵SPに巻き込まれた','ボムをもらった','復帰直後にやられた','インク切れで撃ち負けた','高台・有利ポジから撃たれた','その他'];
+const STAGES=['ユノハナ大渓谷','ゴンズイ地区','ヤガラ市場','マテガイ放水路','ナメロウ金属','マサバ海峡大橋','キンメダイ美術館','マヒマヒリゾート&スパ','海女美術大学','チョウザメ造船','ザトウマーケット','スメーシーワールド','クサヤ温泉','ヒラメが丘団地','ナンプラー遺跡','マンタマリア号','タラポートショッピングパーク','コンブトラック','タカアシ経済特区','オヒョウ海運','バイガイ亭','ネギトロ炭鉱','カジキ空港','リュウグウターミナル','デカライン高架下'];
+const COMP_TAGS=['塗り編成','攻撃編成','SP強い','SP弱い'];
+const RULES=['ナワバリ','ガチエリア','ガチヤグラ','ガチホコ','ガチアサリ'];
+const WEAPONS={
+ 'シューター':['わかばシューター','スプラシューター','シャープマーカー','プロモデラーMG','.52ガロン','N-ZAP85','プライムシューター','.96ガロン','ジェットスイーパー','スペースシューター','ボールドマーカー','L3リールガン','H3リールガン','ボトルガイザー'],
+ 'ローラー':['スプラローラー','カーボンローラー','ダイナモローラー','ヴァリアブルローラー','ワイドローラー'],
+ 'チャージャー':['スプラチャージャー','スプラスコープ','スクイックリンα','リッター4K','4Kスコープ','14式竹筒銃・甲','ソイチューバー','R-PEN/5H'],
+ 'スロッシャー':['バケットスロッシャー','ヒッセン','スクリュースロッシャー','オーバーフロッシャー','エクスプロッシャー','モップリン'],
+ 'スピナー':['スプラスピナー','バレルスピナー','ハイドラント','クーゲルシュライバー','ノーチラス47','イグザミナー'],
+ 'マニューバー':['スプラマニューバー','スパッタリー','デュアルスイーパー','ケルビン525','クアッドホッパーブラック','ガエンFF'],
+ 'シェルター':['パラシェルター','キャンピングシェルター','スパイガジェット','24式張替傘・甲'],
+ 'ブラスター':['ホットブラスター','ロングブラスター','ノヴァブラスター','クラッシュブラスター','ラピッドブラスター','Rブラスターエリート','S-BLAST92'],
+ 'フデ':['パブロ','ホクサイ','フィンセント'],
+ 'ストリンガー':['トライストリンガー','LACT-450','フルイドV'],
+ 'ワイパー':['ドライブワイパー','ジムワイパー','デンタルワイパーミント'],
+ 'その他':['その他']
+};
+const KEY='splat-trainer-v1';
+let D={matches:[],focusIdx:0,focusDate:'',customFocuses:[]};
+let mem=null; // fallback storage
+
+function allFocuses(){return FOCUSES.concat(D.customFocuses||[]);}
+function curFocus(){const all=allFocuses();if(D.focusIdx>=all.length||D.focusIdx<0)D.focusIdx=0;return all[D.focusIdx]||all[0];}
+
+async function load(){
+  try{const r=localStorage.getItem(KEY); if(r){D=JSON.parse(r);} }
+  catch(e){ if(mem) D=JSON.parse(mem); }
+  if(!Array.isArray(D.customFocuses))D.customFocuses=[];
+  const today=dstr(new Date());
+  if(D.focusDate!==today){ // 日替わりで課題をローテーション
+    if(D.focusDate) D.focusIdx=(D.focusIdx+1)%allFocuses().length;
+    D.focusDate=today; save();
+  }
+  renderAll();
+}
+async function save(){
+  const s=JSON.stringify(D); mem=s;
+  try{localStorage.setItem(KEY,s);}catch(e){/* in-memory fallback */}
+}
+function dstr(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+
+/* ================= nav ================= */
+function go(p,btn){
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('on'));
+  document.getElementById('pg-'+p).classList.add('on');
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  if(p==='ana')renderAna();
+}
+
+/* ================= home ================= */
+function renderHome(){
+  const f=curFocus();
+  document.getElementById('focusTitle').textContent=f.t;
+  document.getElementById('focusRule').textContent=f.r;
+  const today=dstr(new Date());
+  const tm=D.matches.filter(m=>m.d===today);
+  document.getElementById('stToday').textContent=tm.length;
+  const last=D.matches.slice(-50);
+  document.getElementById('stWin').textContent=last.length?Math.round(100*last.filter(m=>m.res==='win').length/last.length)+'%':'-';
+  const fd=last.filter(m=>m.fd!==null&&m.fd!==undefined);
+  document.getElementById('stFocus').textContent=fd.length?Math.round(100*fd.filter(m=>m.fd).length/fd.length)+'%':'-';
+}
+function nextFocus(){D.focusIdx=(D.focusIdx+1)%allFocuses().length;save();renderHome();renderFocusList();toast('課題を変更しました');}
+
+/* ---- focus manager ---- */
+function renderFocusList(){
+  const all=allFocuses();
+  const el=document.getElementById('focusList');
+  el.innerHTML=all.map((f,i)=>`
+   <div class="frow ${i===D.focusIdx?'cur':''}">
+     <button class="fpick" onclick="setFocus(${i})">${i===D.focusIdx?'● ':''}${esc(f.t)}<small>${esc(f.r||'')}</small></button>
+     ${f.custom?`<button class="fdel" onclick="delFocus('${f.id}')">削除</button>`:'<span class="fbi">標準</span>'}
+   </div>`).join('');
+}
+function setFocus(i){D.focusIdx=i;save();renderHome();renderFocusList();toast('今日の課題を変えました');}
+function addFocus(){
+  const t=document.getElementById('nfTitle').value.trim();
+  const r=document.getElementById('nfRule').value.trim();
+  if(!t){toast('タイトルを入れてね');return;}
+  D.customFocuses=D.customFocuses||[];
+  D.customFocuses.push({id:'c'+Date.now(),t,r:r||t,custom:true});
+  document.getElementById('nfTitle').value='';
+  document.getElementById('nfRule').value='';
+  save();renderHome();renderFocusList();toast('課題を追加しました');
+}
+function delFocus(id){
+  const f=(D.customFocuses||[]).find(x=>x.id===id);
+  if(!f)return;
+  if(!confirm('この課題を削除しますか?\n'+f.t))return;
+  D.customFocuses=D.customFocuses.filter(x=>x.id!==id);
+  if(D.focusIdx>=allFocuses().length)D.focusIdx=0;
+  save();renderHome();renderFocusList();toast('削除しました');
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+/* ================= log ================= */
+let cur=null;
+function pickResult(res){
+  cur={res,fd:null,tags:[],rule:D.lastRule||null,compType:null,compSp:null};
+  document.getElementById('detailCard').style.display='block';
+  document.getElementById('logFocusName').textContent=curFocus().t;
+  document.querySelectorAll('#detailCard .seg .tag').forEach(b=>b.classList.remove('on'));
+  // rule chips (前回のルールを初期選択)
+  const rw=document.getElementById('ruleWrap'); rw.innerHTML='';
+  RULES.forEach(r=>{
+    const b=document.createElement('button');b.className='tag';b.textContent=r;
+    if(r===cur.rule)b.classList.add('on');
+    b.onclick=()=>{rw.querySelectorAll('.tag').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on');cur.rule=r;};
+    rw.appendChild(b);
+  });
+  // stage select (前回のステージを初期値に)
+  const sel=document.getElementById('inStage');
+  sel.innerHTML='<option value="">選択しない</option>'+STAGES.map(s=>`<option>${s}</option>`).join('');
+  if(D.lastStage)sel.value=D.lastStage;
+  // KD
+  document.getElementById('inK').value='';document.getElementById('inD').value='';
+  // weapon select (クラス別・前回のブキを初期値に)
+  const wsel=document.getElementById('inWeapon');
+  wsel.innerHTML='<option value="">選択しない</option>'+Object.entries(WEAPONS).map(([cls,arr])=>
+    `<optgroup label="${cls}">`+arr.map(w=>`<option>${w}</option>`).join('')+'</optgroup>').join('');
+  if(D.lastWeapon)wsel.value=D.lastWeapon;
+  const w=document.getElementById('tagWrap'); w.innerHTML='';
+  DEATH_TAGS.forEach(t=>{
+    const b=document.createElement('button');b.className='tag';b.textContent=t;
+    b.onclick=()=>{b.classList.toggle('on');
+      cur.tags=[...w.querySelectorAll('.tag.on')].map(x=>x.textContent);};
+    w.appendChild(b);
+  });
+  document.getElementById('detailCard').scrollIntoView({behavior:'smooth'});
+}
+function pickFocus(btn){
+  document.querySelectorAll('#detailCard .seg .tag[data-fd]').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on'); cur.fd=btn.dataset.fd==='1';
+}
+function pickSeg(btn,grp){ // 編成2軸:同じ段はどちらか一方、再タップで解除
+  if(!cur)return;
+  const on=btn.classList.contains('on');
+  document.querySelectorAll('#'+grp+' .tag').forEach(b=>b.classList.remove('on'));
+  if(!on)btn.classList.add('on');
+  cur[grp]=on?null:btn.textContent;
+}
+function cancelLog(){cur=null;document.getElementById('detailCard').style.display='none';}
+function saveMatch(){
+  if(!cur)return;
+  if(cur.fd===null){toast('課題できた/できなかった を選んでね');return;}
+  const stage=document.getElementById('inStage').value||null;
+  const kRaw=document.getElementById('inK').value, dRaw=document.getElementById('inD').value;
+  const k=kRaw===''?null:Math.max(0,parseInt(kRaw)||0);
+  const dd=dRaw===''?null:Math.max(0,parseInt(dRaw)||0);
+  const wp=document.getElementById('inWeapon').value||null;
+  if(stage)D.lastStage=stage; if(wp)D.lastWeapon=wp; if(cur.rule)D.lastRule=cur.rule;
+  const comp=[cur.compType,cur.compSp].filter(Boolean);
+  D.matches.push({d:dstr(new Date()),t:Date.now(),res:cur.res,fd:cur.fd,tags:cur.tags,
+    fid:curFocus().id,rule:cur.rule,stage,k,dd,wp,comp});
+  save(); cancelLog(); renderAll();
+  // 2連敗チェック(今日の直近2戦)
+  const today=dstr(new Date());
+  const tm=D.matches.filter(m=>m.d===today);
+  if(tm.length>=2 && tm[tm.length-1].res==='lose' && tm[tm.length-2].res==='lose'){openBreak();}
+  else toast('記録しました!');
+}
+function renderLog(){
+  const today=dstr(new Date());
+  const tm=D.matches.filter(m=>m.d===today).slice().reverse();
+  const el=document.getElementById('todayList');
+  if(!tm.length){el.innerHTML='<div class="empty">まだ記録がありません。<br>1試合終わるごとにWIN/LOSEを押すだけ!</div>';return;}
+  el.innerHTML=tm.map(m=>{
+    const t=new Date(m.t);
+    const kd=(m.k!==null&&m.k!==undefined&&m.dd!==null&&m.dd!==undefined)?`${m.k}k${m.dd}d`:'';
+    const info=[m.rule||'',m.stage?m.stage.slice(0,5):'',kd,...(m.tags||[]),...(m.comp||[])].filter(Boolean).join('・');
+    return `<div class="h"><span class="res ${m.res==='win'?'w':'l'}">${m.res==='win'?'WIN':'LOSE'}</span>
+      <span>${m.fd?'✅':'▫️'}</span>
+      <span class="tg">${esc(info)}</span>
+      <span class="ti">${t.getHours()}:${String(t.getMinutes()).padStart(2,'0')}</span></div>`;
+  }).join('');
+}
+
+/* ================= break ================= */
+let brTimer=null;
+function openBreak(){
+  document.getElementById('ovBreak').classList.add('on');
+  let s=300; const el=document.getElementById('breakTimer');
+  const tick=()=>{el.textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); if(s<=0){clearInterval(brTimer);el.textContent='OK!';} s--;};
+  tick(); clearInterval(brTimer); brTimer=setInterval(tick,1000);
+}
+function closeBreak(){clearInterval(brTimer);document.getElementById('ovBreak').classList.remove('on');}
+
+/* ================= analysis ================= */
+function renderAna(){
+  const A=D.matches.slice(-50); // 分析対象は直近50試合
+  // death tags(勝敗問わず)
+  const cnt={};let tot=0;
+  A.forEach(m=>(m.tags||[]).forEach(t=>{cnt[t]=(cnt[t]||0)+1;tot++;}));
+  const db=document.getElementById('deathBars');
+  if(!tot){db.innerHTML='<div class="empty">デス原因タグを付けると貯まります</div>';}
+  else{
+    const max=Math.max(...Object.values(cnt));
+    db.innerHTML=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).map(([t,c])=>
+      `<div class="bar"><div class="bl"><span>${esc(t)}</span><span>${c}回</span></div>
+       <div class="tr"><div class="fl" style="width:${Math.round(100*c/max)}%"></div></div></div>`).join('');
+  }
+  // focus by day (last 7 days with data)
+  const byDay={};
+  D.matches.forEach(m=>{if(m.fd===null||m.fd===undefined)return;
+    byDay[m.d]=byDay[m.d]||{ok:0,n:0}; byDay[m.d].n++; if(m.fd)byDay[m.d].ok++;});
+  const days=Object.keys(byDay).sort().slice(-7);
+  const fb=document.getElementById('focusBars');
+  if(!days.length){fb.innerHTML='<div class="empty">記録が貯まるとここに出ます</div>';}
+  else{
+    fb.innerHTML=days.map(d=>{
+      const v=byDay[d];const p=Math.round(100*v.ok/v.n);
+      return `<div class="bar"><div class="bl"><span>${d.slice(5)}</span><span>${p}%(${v.ok}/${v.n})</span></div>
+        <div class="tr"><div class="fl" style="width:${p}%;background:var(--cyan)"></div></div></div>`;}).join('');
+  }
+  // avg KD(直近50戦のうち入力あり)
+  const kdm=A.filter(m=>m.k!==null&&m.k!==undefined&&m.dd!==null&&m.dd!==undefined);
+  if(kdm.length){
+    const ak=kdm.reduce((s,m)=>s+m.k,0)/kdm.length;
+    const ad=kdm.reduce((s,m)=>s+m.dd,0)/kdm.length;
+    document.getElementById('avgK').textContent=ak.toFixed(1);
+    document.getElementById('avgD').textContent=ad.toFixed(1);
+    document.getElementById('avgKD').textContent=ad>0?(ak/ad).toFixed(2):'∞';
+  }else{['avgK','avgD','avgKD'].forEach(i=>document.getElementById(i).textContent='-');}
+  // stage win rate
+  const sb=document.getElementById('stageBars');
+  sb.innerHTML=rateBars(A.filter(m=>m.stage),m=>[m.stage])||'<div class="empty">ステージを記録すると貯まります</div>';
+  // rule win rate
+  const rb=document.getElementById('ruleBars');
+  rb.innerHTML=rateBars(A.filter(m=>m.rule),m=>[m.rule])||'<div class="empty">ルールを記録すると貯まります</div>';
+  // weapon win rate
+  const wb=document.getElementById('weaponBars');
+  wb.innerHTML=rateBars(A.filter(m=>m.wp),m=>[m.wp])||'<div class="empty">ブキを記録すると貯まります</div>';
+  // comp win rate
+  const cb=document.getElementById('compBars');
+  cb.innerHTML=rateBars(A.filter(m=>m.comp&&m.comp.length),m=>m.comp)||'<div class="empty">編成タグを記録すると貯まります</div>';
+}
+function rateBars(list,keyFn){
+  const g={};
+  list.forEach(m=>keyFn(m).forEach(k=>{g[k]=g[k]||{w:0,n:0};g[k].n++;if(m.res==='win')g[k].w++;}));
+  const ent=Object.entries(g).sort((a,b)=>b[1].n-a[1].n).slice(0,10);
+  if(!ent.length)return '';
+  return ent.map(([k,v])=>{
+    const p=Math.round(100*v.w/v.n);
+    const col=p>=55?'var(--lime)':p>=45?'var(--cyan)':'var(--pink)';
+    return `<div class="bar"><div class="bl"><span>${esc(k)}</span><span>${p}%(${v.w}/${v.n})</span></div>
+      <div class="tr"><div class="fl" style="width:${p}%;background:${col}"></div></div></div>`;
+  }).join('');
+}
+async function resetAll(){
+  if(!confirm('すべての記録を消します。よろしいですか?'))return;
+  D={matches:[],focusIdx:0,focusDate:dstr(new Date()),customFocuses:[]};
+  try{localStorage.removeItem(KEY);}catch(e){}
+  mem=null; save(); renderAll(); toast('リセットしました');
+}
+
+/* ================= training: map-reading drill ================= */
+let tr={on:false,seen:0,events:0,time:60,timers:[],players:[],quizTimeout:null,next:1,sets:0};
+function clamp01(v){return Math.min(1,Math.max(0,v));}
+function makePlayers(){
+  const mm=document.getElementById('minimap');
+  mm.querySelectorAll('.dot').forEach(e=>e.remove());
+  tr.players=[];
+  ['ally','foe'].forEach(side=>{
+    for(let i=0;i<4;i++){
+      const el=document.createElement('div');el.className='dot '+side;
+      mm.appendChild(el);
+      const p={el,side,x:Math.random(),y:Math.random(),alive:true,hidden:false};
+      tr.players.push(p);placePlayer(p);
+    }
+  });
+  drawLamps();
+}
+function placePlayer(p){
+  p.el.style.left=(8+p.x*84)+'%';
+  p.el.style.top=(16+p.y*68)+'%';
+  p.el.classList.toggle('hide',!(p.alive&&!p.hidden));
+}
+function drawLamps(){
+  const lamp=p=>`<div class="lp ${p.alive?p.side:'dead'}"></div>`;
+  const allies=tr.players.filter(p=>p.side==='ally');
+  const foes=tr.players.filter(p=>p.side==='foe');
+  document.getElementById('lampBar').innerHTML=
+    allies.map(lamp).join('')+'<div class="lp gap"></div>'+foes.map(lamp).join('');
+}
+function moveAll(){
+  tr.players.forEach(p=>{
+    if(p.alive){
+      p.x=clamp01(p.x+(Math.random()-0.5)*0.5);
+      p.y=clamp01(p.y+(Math.random()-0.5)*0.5);
+      if(Math.random()<0.12)p.hidden=!p.hidden; // 潜伏トグル(生存・ランプは点灯)
+    }
+    if(Math.random()<0.06){p.alive=!p.alive;if(p.alive)p.hidden=false;} // 倒れる/復帰
+  });
+  ['ally','foe'].forEach(side=>{ // 各チーム最低1人は生存
+    const team=tr.players.filter(p=>p.side===side);
+    if(!team.some(p=>p.alive))team[0].alive=true;
+  });
+  tr.players.forEach(placePlayer);
+  drawLamps();
+}
+function startTraining(){
+  if(tr.on)return;
+  tr={on:true,seen:0,events:0,time:60,timers:[],players:[],quizTimeout:null,next:1,sets:0};
+  makePlayers(); newSet(); upd();
+  document.getElementById('drillQuiz').classList.remove('on');
+  document.getElementById('trBtn').textContent='プレイ中…';
+  tr.timers.push(setInterval(()=>{tr.time--;upd();if(tr.time<=0)endTraining();},1000));
+  tr.timers.push(setInterval(moveAll,900));
+  scheduleQuiz();
+}
+function scheduleQuiz(){
+  if(!tr.on)return;
+  const wait=4500+Math.random()*3500;
+  tr.timers.push(setTimeout(()=>{if(tr.on)fireQuiz();},wait));
+}
+function advLabel(a,f){return a>f?'有利':a<f?'不利':'五分';}
+function fireQuiz(){
+  tr.events++;
+  const allies=tr.players.filter(p=>p.side==='ally');
+  const foes=tr.players.filter(p=>p.side==='foe');
+  const allyAlive=allies.filter(p=>p.alive).length;
+  const foeAlive=foes.filter(p=>p.alive).length;
+  const visFoe=foes.filter(p=>p.alive&&!p.hidden);
+  const visAlly=allies.filter(p=>p.alive&&!p.hidden);
+  const types=['adv','foeWhere','allyWhere','foeCount'];
+  let type=types[Math.floor(Math.random()*types.length)];
+  if(type==='foeWhere'&&!visFoe.length)type='adv';
+  if(type==='allyWhere'&&!visAlly.length)type='adv';
+  let q,opts,correct;
+  if(type==='adv'){
+    q='今、人数は?'; opts=['有利','五分','不利']; correct=advLabel(allyAlive,foeAlive);
+  }else if(type==='foeCount'){
+    q='敵はマップに何人見えてた?'; opts=['0','1','2','3','4']; correct=String(visFoe.length);
+  }else{
+    const team=type==='foeWhere'?visFoe:visAlly;
+    const z={'左':0,'中':0,'右':0};
+    team.forEach(p=>{z[p.x<1/3?'左':p.x<2/3?'中':'右']++;});
+    let mx=-1;correct='中';['左','中','右'].forEach(k=>{if(z[k]>mx){mx=z[k];correct=k;}});
+    q=(type==='foeWhere'?'敵':'味方')+'が多かったのは?'; opts=['左','中','右'];
+  }
+  showQuiz(q,opts,correct);
+}
+function showQuiz(q,opts,correct){
+  const ov=document.getElementById('drillQuiz');
+  document.getElementById('dqQ').textContent=q;
+  const ow=document.getElementById('dqOpts'); ow.innerHTML='';
+  opts.forEach(o=>{const b=document.createElement('button');b.textContent=o;
+    b.onclick=()=>answerQuiz(o===correct);ow.appendChild(b);});
+  ov.classList.add('on');
+  tr.quizTimeout=setTimeout(()=>{if(ov.classList.contains('on'))answerQuiz(false);},4500);
+  tr.timers.push(tr.quizTimeout);
+}
+function answerQuiz(ok){
+  clearTimeout(tr.quizTimeout);
+  const ov=document.getElementById('drillQuiz');
+  if(!ov.classList.contains('on'))return;
+  ov.classList.remove('on');
+  if(ok)tr.seen++;
+  upd();
+  toast(ok?'正解!':'うーん、もう一度盤面を意識');
+  scheduleQuiz();
+}
+const NUMS=12;
+function newSet(){
+  const f=document.getElementById('field');
+  f.innerHTML=''; tr.next=1;
+  const cols=3, rows=Math.ceil(NUMS/cols);
+  const fw=f.clientWidth||300, fh=f.clientHeight||300;
+  const cellW=fw/cols, cellH=fh/rows, size=52;
+  const cells=[...Array(NUMS).keys()];
+  for(let i=cells.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[cells[i],cells[j]]=[cells[j],cells[i]];}
+  for(let n=1;n<=NUMS;n++){
+    const cell=cells[n-1], cx=cell%cols, cy=Math.floor(cell/cols);
+    const mx=Math.max(0,cellW-size-12), my=Math.max(0,cellH-size-10);
+    const x=cx*cellW+6+Math.random()*mx, y=cy*cellH+5+Math.random()*my;
+    const b=document.createElement('div');b.className='blob';b.textContent=n;
+    b.style.left=x+'px'; b.style.top=y+'px';
+    b.style.transform='rotate('+(Math.random()*16-8)+'deg)';
+    b.onpointerdown=()=>tapNum(b,n);
+    f.appendChild(b);
+  }
+}
+function tapNum(b,n){
+  if(!tr.on)return;
+  if(n===tr.next){
+    b.classList.add('gone'); setTimeout(()=>b.remove(),180);
+    tr.next++;
+    if(tr.next>NUMS){tr.sets++; toast('セットクリア!'); newSet();}
+    upd();
+  }else{
+    b.classList.add('wrong'); setTimeout(()=>b.classList.remove('wrong'),350);
+  }
+}
+function upd(){
+  document.getElementById('trNext').textContent=tr.next>NUMS?'✓':tr.next;
+  document.getElementById('trTime').textContent=tr.time;
+  document.getElementById('trAware').textContent=tr.seen+'/'+tr.events;
+}
+function endTraining(){
+  tr.on=false; tr.timers.forEach(t=>{clearInterval(t);clearTimeout(t);});
+  document.getElementById('field').innerHTML='';
+  document.getElementById('drillQuiz').classList.remove('on');
+  document.getElementById('trBtn').textContent='もう一回(60秒)';
+  const rate=tr.events?Math.round(100*tr.seen/tr.events):0;
+  let msg;
+  if(rate>=80)msg=`正解率${rate}%!手元に集中しながら盤面が読めてる`;
+  else if(rate>=50)msg=`正解率${rate}%。チラ見の回数を増やそう`;
+  else msg=`正解率${rate}%。まず手を止めてでも盤面を見る癖から`;
+  toast(msg+`(${tr.sets}セット完了)`);
+}
+
+/* ================= misc ================= */
+function toast(s){const t=document.getElementById('toast');t.textContent=s;
+  t.classList.remove('on');void t.offsetWidth;t.classList.add('on');}
+function renderAll(){renderHome();renderFocusList();renderLog();
+  const d=new Date();
+  document.getElementById('hdrDate').textContent=(d.getMonth()+1)+'/'+d.getDate()+' '+'日月火水木金土'[d.getDay()];
+}
+load();
+</script>
+</body>
+</html>
