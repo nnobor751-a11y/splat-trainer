@@ -226,7 +226,7 @@ small.note{display:block;color:var(--muted);font-size:11.5px;line-height:1.6;mar
     </div>
 
     <div class="card">
-      <div class="eyebrow">IF → THEN ルール(試合中はこれだけ)</div>
+      <div class="eyebrow">「こうなったら → こうする」ルール(試合中はこれだけ)</div>
       <ul class="rules">
         <li><span class="if">デス音がしたら</span>イカランプを見る</li>
         <li><span class="if">敵インクが見えたら</span>塗らずにクリアリング</li>
@@ -401,6 +401,59 @@ small.note{display:block;color:var(--muted);font-size:11.5px;line-height:1.6;mar
       <button class="btn lime" id="trBtn" onclick="toggleTraining()" style="flex:1">スタート(60秒)</button>
     </div>
   </section>
+
+  <!-- ============ HELP ============ -->
+  <section class="page" id="pg-help">
+    <h4 class="sec">ヘルプ・使い方</h4>
+
+    <div class="card">
+      <div class="eyebrow">このアプリは?</div>
+      <p style="font-size:13px;line-height:1.75">スプラの上達を「1日1課題・10秒記録・盤面を読む練習」で支える個人用アプリ。勝敗より<b>課題をこなせたか</b>で自分を伸ばします。データは全部この端末の中だけ(誰にも送られません)。</p>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">スマホに「アプリ」として入れる</div>
+      <ul class="rules">
+        <li><span class="if">iPhone</span>Safariでこのページを開く → 共有ボタン(□に↑) → 「ホーム画面に追加」</li>
+        <li><span class="if">Android</span>Chromeで開く → メニュー(⋮) → 「アプリをインストール」</li>
+      </ul>
+      <small class="note">追加すると専用アイコンで全画面起動・オフラインでも動きます。</small>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">友達に渡す</div>
+      <p style="font-size:13px;line-height:1.75">このページのURLをLINE等で送るだけ。相手も同じ手順でアプリにできます。<b>戦績は各自の端末ごと</b>に貯まり、混ざりません。</p>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">各タブの使い方</div>
+      <ul class="rules">
+        <li><span class="if">🏠ホーム</span>今日の課題を確認・選ぶ・自分で追加</li>
+        <li><span class="if">✍️記録</span>試合後にWIN/LOSEを押して10秒入力</li>
+        <li><span class="if">📊分析</span>直近50戦の弱点を確認。AIコーチ用コピーもここ</li>
+        <li><span class="if">🗺️マップ読み</span>手元をやりながら盤面を読む練習。難易度3段階。プレイ中は「中断する」で停止</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">難易度の変え方</div>
+      <p style="font-size:13px;line-height:1.75">「🗺️マップ読み」タブのスタートボタン上にある<b>やさしい / ふつう / むずい</b>をタップ。選んだ難易度は記憶されます。まずは「やさしい」で正解率80%を目標に。</p>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">AIにコーチしてもらう</div>
+      <p style="font-size:13px;line-height:1.75">「📊分析」タブの<b>「📋分析データをコピー」</b>を押す → ChatGPTやClaude等に貼り付けて送信 → 弱点と次の課題を提案してくれます。</p>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">困ったとき</div>
+      <ul class="rules">
+        <li><span class="if">更新されない</span>アプリを完全に閉じて開き直す(1回でOK)</li>
+        <li><span class="if">記録を全部消したい</span>「📊分析」タブ一番下の「記録をすべてリセット」</li>
+        <li><span class="if">データは消える?</span>普通は消えません。iPhoneは長期間(目安7日)一度も開かないと消えることがあるので週1は起動を</li>
+      </ul>
+    </div>
+  </section>
 </main>
 
 <!-- break overlay -->
@@ -428,6 +481,7 @@ small.note{display:block;color:var(--muted);font-size:11.5px;line-height:1.6;mar
   <button data-pg="log" onclick="go('log',this)"><span class="ic">✍️</span>記録</button>
   <button data-pg="ana" onclick="go('ana',this)"><span class="ic">📊</span>分析</button>
   <button data-pg="tr" onclick="go('tr',this)"><span class="ic">🗺️</span>マップ読み</button>
+  <button data-pg="help" onclick="go('help',this)"><span class="ic">❓</span>ヘルプ</button>
 </nav>
 
 <script>
@@ -706,7 +760,7 @@ function buildAIReport(){
   const L=[];
   L.push('# スプラトゥーン3 戦績の分析依頼');
   L.push('あなたはスプラトゥーン3の上達コーチです。以下は私の直近の戦績データ(課題達成率を重視して練習しています)。');
-  L.push('1) 今の弱点を重要な順に3つ、2) 明日から試せる具体的な「IF→THEN」課題を3つ、3) 一番効きそうな1つ、を提案してください。専門用語は噛み砕いて。');
+  L.push('1) 今の弱点を重要な順に3つ、2) 明日から試せる具体的な「こうなったら→こうする」形式の課題を3つ、3) 一番効きそうな1つ、を提案してください。専門用語は噛み砕いて。');
   L.push('');
   const win=A.filter(m=>m.res==='win').length;
   L.push('## 全体(直近'+A.length+'戦)');
@@ -930,8 +984,10 @@ function endTraining(){
 }
 
 /* ================= misc ================= */
+let toastTimer=null;
 function toast(s){const t=document.getElementById('toast');t.textContent=s;
-  t.classList.remove('on');void t.offsetWidth;t.classList.add('on');}
+  t.classList.remove('on');void t.offsetWidth;t.classList.add('on');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('on'),3000);}
 function renderAll(){renderHome();renderFocusList();renderLog();renderDiff();
   const d=new Date();
   document.getElementById('hdrDate').textContent=(d.getMonth()+1)+'/'+d.getDate()+' '+'日月火水木金土'[d.getDay()];
