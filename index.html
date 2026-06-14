@@ -119,6 +119,8 @@ nav button.on .ic{filter:drop-shadow(0 0 6px rgba(191,242,46,.6))}
 .trow .tt{flex:1;font-size:13px;font-weight:700;line-height:1.4}
 .trow .tt small{display:block;color:var(--muted);font-weight:500;font-size:11px;margin-top:2px}
 .trow .tm{font-size:10px;color:var(--muted);font-weight:700;white-space:nowrap;text-align:right;flex:none}
+.fskip{background:none;border:1px solid var(--lime);color:var(--lime);border-radius:99px;font-size:10px;font-weight:800;padding:6px 11px;cursor:pointer;white-space:nowrap;flex:none}
+.fskip:active{background:var(--lime);color:#15141F}
 
 /* ---- log ---- */
 .bigrow{display:flex;gap:12px;margin-bottom:14px}
@@ -739,11 +741,14 @@ function renderTaskList(){
     const rows=L.tasks.map(t=>{
       const cl=isCleared(t.id), curr=(D.curTask===t.id), pg=taskProgress(t.id);
       const status=cl?'✓':curr?'●':'';
-      const meta=cl?'クリア':(unlocked?pg.ok+'/'+pg.n+'戦':'未解放');
+      const sub=esc(t.r)+((unlocked&&!cl)?' ・ '+pg.ok+'/'+pg.n+'戦':'');
+      const right=cl?'<span class="tm">クリア</span>'
+        :unlocked?'<button class="fskip" onclick="event.stopPropagation();skipTask(\''+t.id+'\')">できてる</button>'
+        :'<span class="tm">未解放</span>';
       const tap=(unlocked&&!cl)?' onclick="setFocus(\''+t.id+'\')"':'';
       return '<div class="trow'+(curr?' cur':'')+(cl?' done':'')+(!unlocked?' lock':'')+'"'+tap+'>'+
-        '<span class="ts">'+status+'</span><span class="tt">'+esc(t.t)+'<small>'+esc(t.r)+'</small></span>'+
-        '<span class="tm">'+meta+'</span></div>';
+        '<span class="ts">'+status+'</span><span class="tt">'+esc(t.t)+'<small>'+sub+'</small></span>'+
+        right+'</div>';
     }).join('');
     return '<details class="lvblock"'+open+'><summary>Lv '+L.lv+' <span class="lvbadge">'+badge+'</span></summary>'+rows+'</details>';
   }).join('');
@@ -760,6 +765,14 @@ function renderTaskList(){
   document.getElementById('taskList').innerHTML=custom+levels;
 }
 function setFocus(id){if(!taskById(id))return;D.curTask=id;save();renderHome();renderTaskList();renderRoadmap();toast('今日の課題にしました');window.scrollTo({top:0,behavior:'smooth'});}
+function skipTask(id){
+  const t=taskById(id); if(!t)return;
+  if((D.cleared||[]).includes(id))return;
+  if(!confirm('「'+t.t+'」はもう出来ている課題としてクリアにしますか?'))return;
+  D.cleared=D.cleared||[]; D.cleared.push(id);
+  if(D.curTask===id){const nx=firstUnclearedTask();if(nx)D.curTask=nx.id;}
+  save();renderHome();renderTaskList();renderRoadmap();toast('クリアにしました（スキップ）');
+}
 function addFocus(){
   const t=document.getElementById('nfTitle').value.trim();
   const r=document.getElementById('nfRule').value.trim();
